@@ -18,3 +18,52 @@
 ```bash
 pip install -U inex-launcher
 ```
+
+### Single-file configuration
+
+`inex-launcher` lets you describe an entire experiment in a single YAML file. The `plugins` list defines the initialization order of handlers. For each handler you only need to provide the module path and its options. The `execute` section describes the final method that will be called.
+
+```yaml
+plugins:
+  - loader
+  - model
+  - trainer
+
+loader:
+  module: myproject.data/Loader
+  options:
+    path: data/train.csv
+
+model:
+  module: myproject.nn/Model
+  options:
+    hidden: 128
+
+trainer:
+  module: myproject.training/Trainer
+  imports:
+    model: plugins.model
+    data: plugins.loader
+  options:
+    epochs: 10
+
+execute:
+  method: myproject.training/run
+  imports:
+    trainer: plugins.trainer
+```
+
+Run this configuration with:
+
+```bash
+inex config.yaml
+```
+
+You can fine-tune the experiment by merging it with another file using `--merge` and overriding specific values with `--update`:
+
+```bash
+inex config.yaml -m experiment.yaml -u trainer.epochs=20 model.hidden=64
+```
+
+This approach lets you modify parameters or even replace handlers with just a few lines of YAML—no need to edit high‑level Python files.
+
